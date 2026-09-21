@@ -1,7 +1,8 @@
-import { address, config } from '@wagmi/test'
-import type { Address } from 'viem'
+import { accounts, address, chain, config } from '@wagmi/test'
+import { type Address, http } from 'viem'
 import { expect, test } from 'vitest'
-import type { Connector } from '../createConfig.js'
+import { mock } from '../connectors/mock.js'
+import { type Connector, createConfig } from '../createConfig.js'
 import { connect } from './connect.js'
 import { disconnect } from './disconnect.js'
 import { getConnectorClient } from './getConnectorClient.js'
@@ -11,6 +12,23 @@ const connector = config.connectors[0]!
 test('default', async () => {
   await connect(config, { connector })
   await expect(getConnectorClient(config)).resolves.toBeDefined()
+  await disconnect(config, { connector })
+})
+
+test('behavior: forwards dataSuffix from config', async () => {
+  const dataSuffix = '0x1234' as const
+  const config = createConfig({
+    chains: [chain.mainnet],
+    connectors: [mock({ accounts })],
+    dataSuffix,
+    storage: null,
+    transports: { [chain.mainnet.id]: http() },
+  })
+  const connector = config.connectors[0]!
+
+  await connect(config, { connector })
+  const client = await getConnectorClient(config)
+  expect(client.dataSuffix).toBe(dataSuffix)
   await disconnect(config, { connector })
 })
 

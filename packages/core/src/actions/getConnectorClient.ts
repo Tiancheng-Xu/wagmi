@@ -147,6 +147,7 @@ export async function getConnectorClient<
   return createClient({
     account,
     chain,
+    dataSuffix: config.getClient({ chainId }).dataSuffix,
     name: 'Connector Client',
     transport: (opts) => custom(provider)({ ...opts, retryCount: 0 }),
   }) as Return
