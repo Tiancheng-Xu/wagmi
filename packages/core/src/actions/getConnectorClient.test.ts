@@ -32,6 +32,28 @@ test('behavior: forwards dataSuffix from config', async () => {
   await disconnect(config, { connector })
 })
 
+test('behavior: forwards dataSuffix when connector chain is not configured', async () => {
+  const dataSuffix = '0x1234' as const
+  const config = createConfig({
+    chains: [chain.mainnet],
+    connectors: [mock({ accounts })],
+    dataSuffix,
+    storage: null,
+    transports: { [chain.mainnet.id]: http() },
+  })
+  const connector = config.connectors[0]!
+
+  await connect(config, { connector })
+  connector.getChainId = async () => 999
+  const client = await getConnectorClient(config, {
+    assertChainId: false,
+    connector,
+  })
+  expect(client.chain).toBeUndefined()
+  expect(client.dataSuffix).toBe(dataSuffix)
+  await disconnect(config, { connector })
+})
+
 test('parameters: connector', async () => {
   const connector2 = config.connectors[1]!
   await connect(config, { connector })
